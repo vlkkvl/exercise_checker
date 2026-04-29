@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "Exercise Checker",
+    "slug": "exercise-checker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "exercisechecker",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Camera is used to record your exercise for form analysis.",
+        "NSMicrophoneUsageDescription": "Microphone access is required for video recording.",
+        "NSPhotoLibraryUsageDescription": "Photo library access lets you pick an existing exercise video."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Exercise Checker to access your photos to pick a workout video.",
+          "cameraPermission": "Allow Exercise Checker to use the camera to record your workout."
+        }
+      ]
+    ]
+  }
+}
