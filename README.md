@@ -42,24 +42,17 @@ exercise_checker/
 ### Steps
 
 ```bash
-cd backend
+python3 -m venv .venv
+source .venv/bin/activate
 
-# Create and activate a virtual environment
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install --upgrade pip
+pip install -r backend/requirements.txt
 
-# Install dependencies
-pip install -r requirements.txt
+cp backend/.env.example backend/.env
 
-# (Optional) pre-download the MediaPipe pose model (~29 MB)
-python -c "from pose_extractor import download_model; download_model()"
-# If skipped, it downloads automatically on first request
+python -c "from backend.pose_extractor import download_model; download_model()"
 
-# Copy env file
-cp .env.example .env
-
-# Run the server
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 The API will be available at `http://localhost:8000`.
@@ -104,15 +97,10 @@ Interactive docs: `http://localhost:8000/docs`
 ```bash
 cd mobile
 
-# Install dependencies
 npm install
 
-# Copy env file and set your backend URL
 cp .env.example .env
-# Edit .env — if using a physical device, replace localhost with your LAN IP:
-#   EXPO_PUBLIC_API_URL=http://192.168.x.x:8000
 
-# Start Expo
 npx expo start
 ```
 

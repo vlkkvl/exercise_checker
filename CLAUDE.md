@@ -39,10 +39,10 @@ Mobile app that records a workout video, analyses pose landmarks, and gives form
 
 ### Backend
 ```bash
-cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python -m venv backend/.venv
+source backend/.venv/bin/activate
+pip install -r backend/requirements.txt
+uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Mobile
@@ -50,7 +50,7 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 cd mobile
 npm install
 cp .env.example .env   # set EXPO_PUBLIC_API_URL to LAN IP for physical devices
-npx expo start
+npx expo start -c
 ```
 
 ## Constraints

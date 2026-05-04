@@ -6,11 +6,15 @@ Requires the pose landmarker model asset; download it once with:
 or place pose_landmarker_full.task next to this file.
 """
 
+import logging
+import time
 import urllib.request
 from pathlib import Path
 
 import cv2
 import mediapipe as mp
+
+logger = logging.getLogger("exercise_checker.pose")
 
 BaseOptions = mp.tasks.BaseOptions
 PoseLandmarker = mp.tasks.vision.PoseLandmarker
@@ -27,9 +31,13 @@ _DEFAULT_MODEL = Path(__file__).parent / "pose_landmarker_full.task"
 def download_model(dest: Path = _DEFAULT_MODEL) -> Path:
     """Download the pose landmarker model if not already present."""
     if not dest.exists():
-        print(f"Downloading pose landmarker model to {dest} …")
+        logger.info("Downloading pose landmarker model to %s …", dest)
+        t0 = time.perf_counter()
         urllib.request.urlretrieve(_MODEL_URL, dest)
-        print("Download complete.")
+        logger.info(
+            "Model download complete (%.1f MB in %.2fs)",
+            dest.stat().st_size / (1024 * 1024), time.perf_counter() - t0,
+        )
     return dest
 
 
@@ -43,6 +51,7 @@ def extract_landmarks(
     - an empty list if no pose was detected in that frame
     """
     model_path = Path(model_path) if model_path else download_model()
+    logger.info("Using pose model: %s (exists=%s)", model_path, model_path.exists())
 
     options = PoseLandmarkerOptions(
         base_options=BaseOptions(model_asset_path=str(model_path)),
@@ -55,13 +64,29 @@ def extract_landmarks(
 
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
+        logger.error("Cannot open video: %s", video_path)
         raise ValueError(f"Cannot open video: {video_path}")
 
     fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+    logger.info(
+        "Video opened: %s | fps=%.2f total_frames=%d est_duration=%.1fs",
+        video_path, fps, total_frames, (total_frames / fps) if fps else 0,
+    )
+
     frames: list[list[dict]] = []
     frame_idx = 0
+    detected_count = 0
 
+    landmarker_init_start = time.perf_counter()
     with PoseLandmarker.create_from_options(options) as landmarker:
+        logger.info(
+            "PoseLandmarker initialized in %.2fs",
+            time.perf_counter() - landmarker_init_start,
+        )
+        loop_start = time.perf_counter()
+        last_progress_log = loop_start
+
         while True:
             ret, frame = cap.read()
             if not ret:
@@ -81,13 +106,34 @@ def extract_landmarks(
                         "z": lm.z,
                         "visibility": lm.visibility,
                     }
-                    for lm in result.pose_landmarks[0]  # first detected pose
+                    for lm in result.pose_landmarks[0]
                 ]
                 frames.append(lms)
+                detected_count += 1
             else:
                 frames.append([])
 
             frame_idx += 1
 
+            # progress log roughly every second of wall clock to bound noise
+            now = time.perf_counter()
+            if now - last_progress_log >= 1.0:
+                logger.info(
+                    "  …processed %d/%s frames (%.1f fps, %d with pose)",
+                    frame_idx,
+                    total_frames or "?",
+                    frame_idx / (now - loop_start) if now > loop_start else 0,
+                    detected_count,
+                )
+                last_progress_log = now
+
+        loop_elapsed = time.perf_counter() - loop_start
+
     cap.release()
+    logger.info(
+        "Inference complete: %d frames in %.2fs (%.1f fps avg, %d with pose)",
+        frame_idx, loop_elapsed,
+        frame_idx / loop_elapsed if loop_elapsed > 0 else 0,
+        detected_count,
+    )
     return frames
