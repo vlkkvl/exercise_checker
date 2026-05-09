@@ -29,14 +29,26 @@ class Squat(Exercise):
         shoulder = self.midpoint(lms, self.LEFT_SHOULDER, self.RIGHT_SHOULDER)
 
         knee_toe = max(
-            self.lm(lms, self.LEFT_KNEE)[0] - self.lm(lms, self.LEFT_FOOT_INDEX)[0],
-            self.lm(lms, self.RIGHT_KNEE)[0] - self.lm(lms, self.RIGHT_FOOT_INDEX)[0],
+            self._knee_past_toe(lms, self.LEFT_KNEE, self.LEFT_ANKLE, self.LEFT_FOOT_INDEX),
+            self._knee_past_toe(lms, self.RIGHT_KNEE, self.RIGHT_ANKLE, self.RIGHT_FOOT_INDEX),
         )
 
-        above_hip = np.array([hip[0], hip[1] - 0.1])
+        above_hip = hip + np.array([0.0, -0.1, 0.0])
 
         return {
             "knee_angle": self.angle(hip, knee, ankle),
             "knee_toe": knee_toe,
             "torso_angle": self.angle(shoulder, hip, above_hip),
         }
+
+    def _knee_past_toe(self, lms: list[dict], knee_idx: int, ankle_idx: int, toe_idx: int) -> float:
+        """Signed distance the knee has travelled past the toe along the foot's pointing
+        direction in the horizontal (xz) plane. Positive means knee is in front of toe."""
+        knee = self.horizontal(self.lm(lms, knee_idx))
+        ankle = self.horizontal(self.lm(lms, ankle_idx))
+        toe = self.horizontal(self.lm(lms, toe_idx))
+        foot_dir = toe - ankle
+        foot_len = float(np.linalg.norm(foot_dir))
+        if foot_len < 1e-6:
+            return 0.0
+        return float(np.dot(knee - toe, foot_dir) / foot_len)

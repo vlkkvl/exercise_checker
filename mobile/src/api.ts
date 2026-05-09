@@ -25,6 +25,7 @@ export async function analyzeVideo(
 ): Promise<AnalysisResult> {
   const url = `${API_BASE_URL}/analyze`;
   console.log("[analyzeVideo] start", { url, exercise, videoUri });
+  console.log("API_BASE_URL =", API_BASE_URL);
 
   const form = new FormData();
   form.append("exercise", exercise);

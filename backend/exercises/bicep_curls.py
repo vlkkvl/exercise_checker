@@ -38,7 +38,7 @@ class BicepCurl(Exercise):
             elbow = self.lm(lms, e_idx)
             wrist = self.lm(lms, w_idx)
             angles.append(self.angle(shoulder, elbow, wrist))
-            drifts.append(abs(float(elbow[0] - shoulder[0])))
+            drifts.append(float(np.linalg.norm(self.horizontal(elbow) - self.horizontal(shoulder))))
 
         if not angles:
             return None

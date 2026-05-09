@@ -39,7 +39,12 @@ class Exercise(ABC):
     @staticmethod
     def lm(landmarks: list[dict], idx: int) -> np.ndarray:
         p = landmarks[idx]
-        return np.array([p["x"], p["y"]])
+        return np.array([p["x"], p["y"], p["z"]])
+
+    @staticmethod
+    def horizontal(p: np.ndarray) -> np.ndarray:
+        """Project a 3D landmark onto the horizontal plane (drop the vertical y axis)."""
+        return np.array([p[0], p[2]])
 
     @classmethod
     def midpoint(cls, landmarks: list[dict], left_idx: int, right_idx: int) -> np.ndarray:

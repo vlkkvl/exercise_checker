@@ -206,8 +206,8 @@ def test_squat_too_shallow_fails():
 
 
 def test_squat_knee_over_toe_fails():
-    # knee.x ahead of foot.x by 0.1 (>0.05 threshold)
-    frame = _squat_frame(foot_xy=(0.4, 0.65))
+    # foot points +x (ankle 0.7, toe 0.72); knee at 0.82 → 0.1 past toe along foot dir (>0.05 threshold)
+    frame = _squat_frame(knee_xy=(0.82, 0.6))
     res = Squat().analyze([frame])
     assert res["passed"] is False
     assert any("knees" in msg.lower() for msg in res["feedback"])
